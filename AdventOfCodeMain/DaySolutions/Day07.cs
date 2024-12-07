@@ -22,28 +22,33 @@ internal class Day07
             .ToArray();
 
 
-        long totalCalibration = FindViableCalibrations(testValues, calibrations);
+        (long totalCalibration, long totalCalibration2) = FindViableCalibrations(testValues, calibrations);
 
-        Console.WriteLine(totalCalibration);
+        Console.WriteLine($"Part 1: {totalCalibration}\nPart 2: {totalCalibration2}");
     }
 
-    private static long FindViableCalibrations(long[] testValues, int[][] calibrations)
+    private static (long, long) FindViableCalibrations(long[] testValues, int[][] calibrations)
     {
         long totalCalibration = 0;
+        long totalCalibration2 = 0;
 
         for (int i = 0; i < testValues.Length; i++)
         {
-            if (IsViableCalculation(testValues[i], calibrations[i]))
+            if (IsViableCalculation(testValues[i], calibrations[i], false))
             {
                 totalCalibration += testValues[i];
+                totalCalibration2 += testValues[i];
             }
-
+            else if (IsViableCalculation(testValues[i], calibrations[i], true))
+            {
+                totalCalibration2 += testValues[i];
+            }
         }
 
-        return totalCalibration;
+        return (totalCalibration, totalCalibration2);
     }
 
-    private static bool IsViableCalculation(long testValue, int[] calibration, int currentIndex = 0, long currentValue = 0)
+    private static bool IsViableCalculation(long testValue, int[] calibration, bool allowConcatenation, int currentIndex = 0, long currentValue = 0)
     {
         if (currentValue > testValue)
             return false;
@@ -57,17 +62,24 @@ internal class Day07
         long num = calibration[currentIndex];
 
         // try adding
-        if (IsViableCalculation(testValue, calibration, currentIndex + 1, currentValue + num))
+        if (IsViableCalculation(testValue, calibration, allowConcatenation, currentIndex + 1, currentValue + num))
         {
             return true;
         }
 
         // try multiplying
-        if (IsViableCalculation(testValue, calibration, currentIndex + 1, currentValue * num))
+        if (IsViableCalculation(testValue, calibration, allowConcatenation, currentIndex + 1, currentValue * num))
+        {
+            return true;
+        }
+
+        // try concatenation if allowed
+        if (allowConcatenation && IsViableCalculation(testValue, calibration, allowConcatenation, currentIndex + 1, long.Parse(currentValue.ToString() + num.ToString())))
         {
             return true;
         }
 
         return false;
     }
+
 }
