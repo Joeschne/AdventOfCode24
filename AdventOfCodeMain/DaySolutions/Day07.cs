@@ -34,12 +34,12 @@ internal class Day07
 
         for (int i = 0; i < testValues.Length; i++)
         {
-            if (IsViableCalculation(testValues[i], calibrations[i], false))
+            if (IsViableCalculation(testValues[i], calibrations[i], false)) // coincatenation disallowed
             {
                 totalCalibration += testValues[i];
                 totalCalibration2 += testValues[i];
             }
-            else if (IsViableCalculation(testValues[i], calibrations[i], true))
+            else if (IsViableCalculation(testValues[i], calibrations[i], true)) // concatenation allowed
             {
                 totalCalibration2 += testValues[i];
             }
