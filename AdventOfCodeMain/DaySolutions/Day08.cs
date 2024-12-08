@@ -10,9 +10,9 @@ internal class Day08
 
         Dictionary<char, List<(int, int)>> antennaPositions = FindAntennas(challengeInput, numRows, numCols);
 
-        int nodeCount = FindAllNodes(antennaPositions, numRows, numCols);
+        (int part1, int part2) nodeCounts = FindAllNodes(antennaPositions, numRows, numCols);
 
-        Console.WriteLine(nodeCount);
+        Console.WriteLine(nodeCounts);
 
 
     }
@@ -40,17 +40,18 @@ internal class Day08
         return antennaPositions;
     }
 
-    private static int FindAllNodes(Dictionary<char, List<(int, int)>> antennaPositions, int numRows, int numCols)
+    private static (int, int) FindAllNodes(Dictionary<char, List<(int, int)>> antennaPositions, int numRows, int numCols)
     {
         HashSet<(int, int)> nodes = new();
+        HashSet<(int, int)> resonantHarmonicsNodes = new();
         foreach (var antennaGroup in antennaPositions)
         {
-            nodes = MarkNodes(antennaGroup.Value, nodes, numRows, numCols);
+            MarkNodes(antennaGroup.Value, nodes, resonantHarmonicsNodes, numRows, numCols);
         }
-        return nodes.Count;
+        return (nodes.Count, resonantHarmonicsNodes.Count);
     }
 
-    private static HashSet<(int, int)> MarkNodes(List<(int row, int col)> positions, HashSet<(int, int)> nodes, int numRows, int numCols)
+    private static void MarkNodes(List<(int row, int col)> positions, HashSet<(int, int)> nodes, HashSet<(int, int)> resonantHarmonicNodes, int numRows, int numCols)
     {
         
         for (int i = 0; i < positions.Count; i++)
@@ -61,19 +62,42 @@ internal class Day08
                 (int row, int col) node1 = SubtractTuples(positions[i], vector);
                 (int row, int col) node2 = AddTuples(positions[j], vector);
 
-                if (node1.row >= 0 && node1.row < numRows && node1.col >= 0 && node1.col < numCols)
+                if (IsWithinBounds(node1, numRows, numCols))
                 {
                     nodes.Add(node1);
                 }
-                if (node2.row >= 0 && node2.row < numRows && node2.col >= 0 && node2.col < numCols)
+                if (IsWithinBounds(node2, numRows, numCols))
                 {
                     nodes.Add(node2);
                 }
+
+                TraverseDirections(positions[i], vector, resonantHarmonicNodes, numRows, numCols);
             }
         }
-        return nodes;
+    }
+
+    private static void TraverseDirections((int row, int col) start, (int row, int col) vector, HashSet<(int, int)> nodes, int numRows, int numCols)
+    {
+        nodes.Add(start);
+        foreach (int direction in new[] { 1, -1 }) // positive and negative directions
+        {
+            (int row, int col) currentNode = start;
+            while (true)
+            {
+                currentNode = AddTuples(currentNode, (vector.row * direction, vector.col * direction));
+                if (IsWithinBounds(currentNode, numRows, numCols))
+                {
+                    nodes.Add(currentNode);
+                }
+                else
+                {
+                    break;
+                }
+            }
+        }
     }
 
     private static (int, int) AddTuples((int, int) tuple1, (int, int) tuple2) => (tuple1.Item1 + tuple2.Item1, tuple1.Item2 + tuple2.Item2);
     private static (int, int) SubtractTuples((int, int) tuple1, (int, int) tuple2) => (tuple1.Item1 - tuple2.Item1, tuple1.Item2 - tuple2.Item2);
+    private static bool IsWithinBounds((int row, int col) position, int numRows, int numCols) => position.row >= 0 && position.row < numRows && position.col >= 0 && position.col < numCols;
 }
