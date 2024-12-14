@@ -1,38 +1,71 @@
-﻿namespace AdventOfCodeMain.DaySolutions;
+﻿using System.Diagnostics;
+
+using System.Diagnostics;
+
+namespace AdventOfCodeMain.DaySolutions;
 
 internal class Day11
 {
     public static void Run()
     {
-        List<string> challengeInput = FileReader.ReadFromFile("Day11.1").Split(" ").ToList();
+        string[] challengeInput = FileReader.ReadFromFile("Day11.1").Split(" ").ToArray();
 
         for (int i = 0; i < 25; i++)
         {
-            Blink(challengeInput);
+            Console.WriteLine(i);
+            challengeInput = Blink(challengeInput);
         }
 
-        Console.WriteLine(challengeInput.Count);
+        Console.WriteLine(challengeInput.Length);
+
     }
-    private static void Blink(List<string> challengeInput)
+    private static string[] Blink(string[] input)
     {
-        for(int i = 0; i < challengeInput.Count; i++)
+        // count how many items we'll add
+        // odd-length strings add 1 item, even-length strings add 2 items, and zero-starting strings add 1.
+        int newCount = 0;
+        for (int i = 0; i < input.Length; i++)
         {
-            if (long.Parse(challengeInput[i]) == 0) challengeInput[i] = "1";
-            else if (challengeInput[i].Length % 2 == 0)
+            var length = input[i].Length;
+            if ((length & 1) == 0) // => even
             {
-                int mid = challengeInput[i].Length / 2;
-
-                string firstHalf = challengeInput[i].Substring(0, mid);
-                string secondHalf = challengeInput[i].Substring(mid);
-
-                challengeInput[i] = firstHalf;
-                challengeInput.Insert(i + 1, (long.Parse(secondHalf).ToString()));
-                i++;
+                newCount += 2;
             }
             else
             {
-                challengeInput[i] = (long.Parse(challengeInput[i]) * 2024).ToString();
+                newCount += 1;
             }
         }
+
+        var newAlignment = new string[newCount];
+        int index = 0;
+
+        for (int i = 0; i < input.Length; i++)
+        {
+            var stoneString = input[i];
+            var length = stoneString.Length;
+            char firstChar = stoneString[0];
+
+            if (firstChar == '0') newAlignment[index++] = "1";
+            else if ((length & 1) == 0)
+            {
+                int mid = length >> 1; // length/2 using bit shift
+                string firstHalf = stoneString[..mid];
+
+                // truncate leading zeros in second half
+                while (mid < length && stoneString[mid] == '0') mid++;
+                string secondHalf = (mid == length) ? "0" : stoneString[mid..];
+
+                newAlignment[index++] = firstHalf;
+                newAlignment[index++] = secondHalf;
+            }
+            else
+            {
+                newAlignment[index++] = (long.Parse(stoneString) * 2024).ToString();
+            }
+        }
+
+        return newAlignment;
     }
+
 }
