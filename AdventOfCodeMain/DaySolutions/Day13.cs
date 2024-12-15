@@ -1,5 +1,5 @@
-﻿using System.Text.RegularExpressions;
-using static System.Runtime.InteropServices.JavaScript.JSType;
+﻿using System.Numerics;
+using System.Text.RegularExpressions;
 
 namespace AdventOfCodeMain.DaySolutions;
 
@@ -12,51 +12,49 @@ internal class Day13
         string pattern = @"X\+(\d+), Y\+(\d+)|X=(\d+), Y=(\d+)";
         Regex regex = new Regex(pattern);
 
-        List<(int, int)> aButtons = new();
-        List<(int, int)> bButtons = new();
-        List<(int, int)> prizes = new();
+        List<(long, long)> aButtons = new();
+        List<(long, long)> bButtons = new();
+        List<(long x, long y)> prizes = new();
 
         var matches = regex.Matches(challengeInput);
         for (int i = 0; i < matches.Count; i += 3)
         {
             var matchA = matches[i];
-            aButtons.Add((int.Parse(matchA.Groups[1].Value), int.Parse(matchA.Groups[2].Value)));
+            aButtons.Add((long.Parse(matchA.Groups[1].Value), long.Parse(matchA.Groups[2].Value)));
 
             var matchB = matches[i + 1];
-            bButtons.Add((int.Parse(matchB.Groups[1].Value), int.Parse(matchB.Groups[2].Value)));
+            bButtons.Add((long.Parse(matchB.Groups[1].Value), long.Parse(matchB.Groups[2].Value)));
 
             var matchPrize = matches[i + 2];
-            prizes.Add((int.Parse(matchPrize.Groups[3].Value), int.Parse(matchPrize.Groups[4].Value)));
+            prizes.Add((long.Parse(matchPrize.Groups[3].Value), long.Parse(matchPrize.Groups[4].Value)));
         }
 
-        // my math is shitty so brute forcing it is
-        int totalPrice = 0;
+        // I just watched a bunch of math tutorials for this bcuz I don't remember anything, this shit better work
+        long totalPrice = 0;
+        long correctedTotalPrice = 0;
         for(int i = 0; i < prizes.Count; i++)
         {
             totalPrice += CalculatePrice(aButtons[i], bButtons[i], prizes[i]);
+            correctedTotalPrice += CalculatePrice(aButtons[i], bButtons[i], (prizes[i].x + 10000000000000, prizes[i].y + 10000000000000));
         }
 
-        Console.WriteLine(totalPrice);
+        Console.WriteLine($"Initial calculated price: {totalPrice}\nCorrected: {correctedTotalPrice}");
     }
-    private static int CalculatePrice((int x, int y) aButton, (int x, int y) bButton, (int x, int y) prizeLocation)
+    private static long CalculatePrice((long x, long y) aButton, (long x, long y) bButton, (long x, long y) prizeLocation)
     {
+        // calculate determinant
+        long determinant = bButton.x * aButton.y - bButton.y * aButton.x;
 
-        List<int> possiblePrices = new();
+        // calculate bPresses and check divisibility
+        long numerator = prizeLocation.x * aButton.y - prizeLocation.y * aButton.x;
+        if (numerator % determinant != 0) return 0; // no integer solution
+        long bPresses = numerator / determinant;
 
-        for (int a = 1; a <= 100; a++)
-        {
-            for (int b = 1; b <= 100; b++)
-            {
-                if ((aButton.x * a + bButton.x * b, aButton.y * a + bButton.y * b) == prizeLocation)
-                {
-                    possiblePrices.Add(a * 3  + b);
-                }
-            }
-        }
+        // calculate aPresses and check divisibility
+        long aNumerator = prizeLocation.x - bPresses * bButton.x;
+        if (aNumerator % aButton.x != 0) return 0; // no integer solution
+        long aPresses = aNumerator / aButton.x;
 
-        if (possiblePrices.Count == 0) return 0;
-
-        return possiblePrices.Min();
-
+        return aPresses * 3 + bPresses;
     }
 }
